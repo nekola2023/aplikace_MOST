@@ -1,3 +1,4 @@
+<?php include 'php/db_connection.php';?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,64 +7,199 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diplomová práce</title>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.105/Build/Cesium/Cesium.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.105/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
-    <!--<link rel="stylesheet" href="css/appCesium.css">-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/appCesium.css">
     <style>
         #cesiumContainer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            top: 250px;
             
-            width: 100%;
-            margin: 0;
-            overflow: hidden;
-            padding: 0;
         }
-        body {
+        body{
             padding: 0;
             margin: 0;
-            overflow: hidden;
         }
     </style>
+    <script type="text/javascript">
+        function picture(){ 
+        var pic = "img/loading.gif"
+        document.getElementById('bigpic').src = pic.replace('90x90', '50x50');
+        document.getElementById('bigpic').style.display='block';
+}
 
+
+</script>
 </head>
 <body>
-    <form action="index.php" method="post">
-        <input type="text" name="name">
-        <input type="submit">
-    </form>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-3 bg-light">    
+        <h2 id="header">Porovnání změny území <b>MOSTECKO</b></h2>
+            <form action="index.php" method="post">
+                
+                <div class="row">
+                    <div class="col-lg-6">
+                        <small class="form-text text-muted">Zobrazit výškový rozdíl</small>
+                        <select id="selectOper" name="operAlt" class="custom-select" required>
+                            <option class="firstSelect" value="" disabled selected value></option>
+                            <option value=">">větší</option>
+                            <option value="<">menší</option>
+                        </select>
+                    </div>  
+                    <div class="col-lg-6">
+                        <small class="form-text text-muted">než</small>
+                        <input id="selectDiff" class="form-control" type="number" min="0" name="diffAlt" required oninput="validity.valid||(value='');"/>
+                    </div>
+                </div>  
+                    <div class="col-lg">
+                        <small class="form-text text-muted">mezi lety</small>
+                        <select id="selectFirst" name="firstAlt" class="custom-select custom-select" required>
+                            <option class="firstSelect" value="" disabled selected value></option>
+                            <option value="1">Výškopis 1938</option>
+                            <option value="2">Výškopis 1951</option>
+                            <option value="3">Výškopis 2000</option>
+                        </select>                
+                        <small class="form-text text-muted">a</small>    
+                        <select id="selectSecond" name="secondAlt" class="custom-select custom-select" required>
+                            <option class="firstSelect" value="" disabled selected value></option>
+                            <option value="2">Výškopis 1951</option>
+                            <option value="3">Výškopis 2000</option>
+                            <option value="4">Výškopis 2020</option>
+                        </select>                    
+                    </div>
+                    <div id="checkFirst" class="col-lg">
+                        <input class="form-check-input" type="radio" name="newCheck" id="flexRadioDefault" checked> 
+                        <label class="form-check-label" for="flexRadioDefault">nezobrazovat využití území</label>
+                    </div>       
+                    <div id="checkSecond" class="col-lg"> 
+                        <input class="form-check-input" type="radio" name="newCheck" id="flexRadioDefault2">    
+                        <label class="form-check-label" for="flexRadioDefault2">zobrazit využití území 19. století</label>  
+                    </div>
+                    <div id="checkThird" class="col-lg">
+                        <input class="form-check-input" type="radio" name="newCheck" id="flexRadioDefault3">  
+                        <label class="form-check-label" for="flexRadioDefault3">zobrazit využití území 2019</label>
+                    </div>  
+                <div class="row">        
+                    <div id="button" class="col-lg-8">
+                        <input type="submit" id="register" value="ZOBRAZIT DATA" class="btn btn-success btn-lg btn-block" onclick="picture()">      
+                    </div>
+                    <div class="col-lg-4">
+                    <img id="bigpic" src="bigpic" style="display:none;" />
+                        
+                    </div>
+                </div>    
+            </form>
+            <div id="picture" class="col-lg pt-4 pb-2">
+                <a href="https://www.natur.cuni.cz/fakulta">
+                    <img src="img/UK_nature.PNG" alt="Přf UK" width="170" height="170">
+                </a>
+            </div>
+            <div class="col-lg" id="footer">
+                <p>Tato aplikace je výstupem diplomové práce Lukáše Nekoly v rámci studia na Přírodověděcké Katedře Univerzity Karlovy.</p>
+            </div>
+        </div>
+        <div class="col-lg-9 bg-light">
+            <div id="cesiumContainer"></div>
+        </div>
+    </div>
+</div> 
+
+<script>
+var removed;
+
+$('#selectFirst').change( function() {
+    var value = this.value;
+    $('#selectSecond').prepend(removed);
+    var toKeep = $('#selectSecond option').filter( function( ) {
+        return parseInt(this.value, 10) > parseInt( value, 10);
+    } );
+    removed =  $('#selectSecond option').filter( function( ) {
+        return parseInt(this.value, 10) < parseInt( value, 10);
+    } );
+    $('#selectSecond').html(toKeep);
+});
+</script>
+
     <?php
-        $db_connect = pg_connect("host=localhost port=5432 dbname=Cesium_app user=postgres password=heslo_123");
+        //Delete existing data
+        $lastTableDropQuery = "DROP TABLE data_show_pol_tab";
+        $lastTableDrop = pg_query($lastTableDropQuery);
 
-        if ($db_connect) {
-            echo 'Connection attempt succeeded.';
-        } 
-        else {
-            echo 'Connection attempt failed.';
+        if(isset($_POST["firstAlt"]) && isset($_POST["secondAlt"]) && isset($_POST["diffAlt"]) && isset($_POST["operAlt"])){ //all values must be filled
+            $firstYear = $_POST["firstAlt"];
+            $secondYear = $_POST["secondAlt"];
+            $diff = $_POST["diffAlt"];
+            $oper = $_POST["operAlt"];
+            
+            //retype number of select to names of attribute in DB table
+            //first attribute
+            if($firstYear == 1) {
+                $firstYear = 'altitude_1938';
             }
-        if(isset($_POST["name"])){
-            $data = $_POST["name"];
-            echo $data;
+            elseif($firstYear == 2) {
+                $firstYear = 'altitude_1951';
+            }
+            elseif($firstYear == 3) {
+                $firstYear = 'altitude_2000';
+            }
+        
+            //second attribute
+            if($secondYear == 2) {
+                $secondYear = 'altitude_1951';
+            }
+            elseif($secondYear == 3) {
+                $secondYear = 'altitude_2000';
+            }
+            elseif($secondYear == 4) {
+                $secondYear = 'altitude_2020';
             }
 
-        $query = "CREATE OR REPLACE VIEW try_view AS (SELECT * FROM altitudes_holesice WHERE altitude_2020 > '$data')";
-        $result = pg_query($query);
-        //$result = pg_query($query) or die('Error message: ' . pg_last_error());
-        /*
+            //number of row based on form
+            $queryNumberRow = "SELECT * FROM altitudes_holesice where ($firstYear - $secondYear) $oper $diff";
+            $resultNumberRow = pg_query($queryNumberRow);    
+            $rowsNumber = pg_num_rows($resultNumberRow);
+            
+            //close_db_connection, when rows is 0
+            if($rowsNumber == 0){
+                pg_close($db_connect);
+            }
+            else{
+            
+            //query without LLUC
+            $query = "CREATE TABLE data_show_pol_tab as(
+                SELECT
+                    ST_NumGeometries(cluster_make),
+                    st_transform(st_concavehull(cluster_make, 0.005, true),4326) AS final_collection
+                        FROM (SELECT unnest(ST_ClusterWithin(st_transform(geom, 32633), 16)) as cluster_make
+                            FROM (SELECT * 
+                                FROM altitudes_holesice as table_main
+                                    WHERE ($firstYear - $secondYear) $oper $diff) as main_query
+                        ) as cluster_main_query
+                            WHERE st_numgeometries(cluster_make) > 5)";
+                
+            }
+            }
+        else{
+            echo 'Je třeba vyplnit všechna pole';
+            pg_close($db_connect);
+        }
+        
+        $result = pg_query($query) or die('Error message: ' . pg_last_error());
+        
         while ($row = pg_fetch_row($result)) {
             var_dump($row);
         }
-        */
-        pg_free_result($result);
+        
+        //pg_free_result($result);
         pg_close($db_connect);
+                
+       
     ?>
-
-
-
-    <div id="cesiumContainer"></div>
+    
     <script>
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNDFkMDE3Yi05NTRiLTQ5NmUtYTUzZC0wOWM3NThiZDQxNTYiLCJpZCI6MTI2MTk2LCJpYXQiOjE2NzcyNTUxOTR9.kYrd0bUaaMnpHGJbWi8zHW0krp3qRTraDDPga9ziIww';
         const viewer = new Cesium.Viewer('cesiumContainer', {
@@ -79,7 +215,7 @@
                 }
             });
         const geoServerUrl = "http://localhost:8080/geoserver/PostGIS/wms"
-        const layerName = "PostGIS:try_view";
+        const altiLayer = "PostGIS:groupLayerCesium";
             const parameters = {
             version: '1.1.0',
             format: 'image/png',
@@ -89,7 +225,7 @@
 
         const webMapServiceImageryProviderOptions = {
             url: geoServerUrl,
-            layers: layerName,
+            layers: altiLayer,
             parameters: parameters,
             };
         const imageryLayer = new Cesium.ImageryLayer(new Cesium.WebMapServiceImageryProvider(webMapServiceImageryProviderOptions));

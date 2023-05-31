@@ -1,15 +1,48 @@
-#cesiumContainer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    margin: 0;
-    overflow: hidden;
-    padding: 0;
+#header {
+    text-align: center;
+    padding-bottom: 15px;
+    padding-top: 5px;
 }
-body {
+
+.firstSelect {
+    display: none;
+}
+
+#footer {
+    text-align: center;
+    font-style: italic;
+    font-size: 12px;
     padding: 0;
     margin: 0;
-    overflow: hidden;
+}
+
+#checkFirst {
+    text-align: center;
+    padding-bottom: 15px;
+    padding-top: 20px;
+}
+
+#checkSecond {
+    text-align: center;
+    
+}
+
+#checkThird {
+    text-align: center;
+    
+}
+
+
+#button {
+    padding-top: 30px;
+    padding-bottom: 20px;
+}
+
+img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+small {
+    text-align: center;
 }
