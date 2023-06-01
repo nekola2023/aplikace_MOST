@@ -22,17 +22,9 @@
         body{
             padding: 0;
             margin: 0;
+            
         }
     </style>
-    <script type="text/javascript">
-        function picture(){ 
-        var pic = "img/loading.gif"
-        document.getElementById('bigpic').src = pic.replace('90x90', '50x50');
-        document.getElementById('bigpic').style.display='block';
-}
-
-
-</script>
 </head>
 <body>
 <div class="container-fluid">
@@ -40,10 +32,18 @@
         <div class="col-lg-3 bg-light">    
         <h2 id="header">Porovnání změny území <b>MOSTECKO</b></h2>
             <form action="index.php" method="post">
-                
+                    <div class="col-lg">
+                        <small class="form-text text-muted">Zobrazit plochu o</small>
+                        <select id="selectupDown" name="upDown" class="custom-select" required>
+                            <option class="firstSelect" value="" disabled selected value></option>
+                            <option value="minus">poklesu n.v.</option>
+                            <option value="plus">navýšení n.v.</option>
+                        <small class="form-text text-muted">nadmořské výšky </small>
+                        </select>
+                    </div> 
                 <div class="row">
                     <div class="col-lg-6">
-                        <small class="form-text text-muted">Zobrazit výškový rozdíl</small>
+                        <small class="form-text text-muted">jejíž změna je</small>
                         <select id="selectOper" name="operAlt" class="custom-select" required>
                             <option class="firstSelect" value="" disabled selected value></option>
                             <option value=">">větší</option>
@@ -52,24 +52,27 @@
                     </div>  
                     <div class="col-lg-6">
                         <small class="form-text text-muted">než</small>
-                        <input id="selectDiff" class="form-control" type="number" min="0" name="diffAlt" required oninput="validity.valid||(value='');"/>
+                        <input id="selectDiff" class="form-control" type="number" name="diffAlt" required/>
+                        <small class="form-text text-muted"> </small>
                     </div>
                 </div>  
+
                     <div class="col-lg">
-                        <small class="form-text text-muted">mezi lety</small>
+                        <small class="form-text text-muted">a to mezi lety</small>
                         <select id="selectFirst" name="firstAlt" class="custom-select custom-select" required>
                             <option class="firstSelect" value="" disabled selected value></option>
-                            <option value="1">Výškopis 1938</option>
-                            <option value="2">Výškopis 1951</option>
-                            <option value="3">Výškopis 2000</option>
-                        </select>                
+                            <option value="1">1938</option>
+                            <option value="2">1951</option>
+                            <option value="3">2000</option>
+                        </select>
+                        
                         <small class="form-text text-muted">a</small>    
                         <select id="selectSecond" name="secondAlt" class="custom-select custom-select" required>
                             <option class="firstSelect" value="" disabled selected value></option>
-                            <option value="2">Výškopis 1951</option>
-                            <option value="3">Výškopis 2000</option>
-                            <option value="4">Výškopis 2020</option>
-                        </select>                    
+                            <option value="2">1951</option>
+                            <option value="3">2000</option>
+                            <option value="4">2020</option>
+                        </select>              
                     </div>
                     <div id="checkFirst" class="col-lg">
                         <input class="form-check-input" type="radio" name="newCheck" id="flexRadioDefault" checked> 
@@ -82,16 +85,11 @@
                     <div id="checkThird" class="col-lg">
                         <input class="form-check-input" type="radio" name="newCheck" id="flexRadioDefault3">  
                         <label class="form-check-label" for="flexRadioDefault3">zobrazit využití území 2019</label>
-                    </div>  
-                <div class="row">        
-                    <div id="button" class="col-lg-8">
-                        <input type="submit" id="register" value="ZOBRAZIT DATA" class="btn btn-success btn-lg btn-block" onclick="picture()">      
-                    </div>
-                    <div class="col-lg-4">
-                    <img id="bigpic" src="bigpic" style="display:none;" />
-                        
-                    </div>
-                </div>    
+                    </div>           
+                <div id="button">
+                    <input type="submit" id="register" value="ZOBRAZIT DATA" class="btn btn-success btn-lg btn-block">
+                    
+                </div>     
             </form>
             <div id="picture" class="col-lg pt-4 pb-2">
                 <a href="https://www.natur.cuni.cz/fakulta">
@@ -108,35 +106,43 @@
     </div>
 </div> 
 
-<script>
-var removed;
+<!--
+  <div id='frame'>
+    <div class='search'>
+      <form method='post'>
+        <select id="selectBox" class="selectBox" required>
+          <option value="">--Select--</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+        <input type='text' name='searchQuery' id='searchInput' required/>
+        <input type='submit' name='submit' id='submitBtn' class='enableOnInput' disabled='disabled' />
+      </form>
+    </div>
+  </div>
+    -->
 
-$('#selectFirst').change( function() {
-    var value = this.value;
-    $('#selectSecond').prepend(removed);
-    var toKeep = $('#selectSecond option').filter( function( ) {
-        return parseInt(this.value, 10) > parseInt( value, 10);
-    } );
-    removed =  $('#selectSecond option').filter( function( ) {
-        return parseInt(this.value, 10) < parseInt( value, 10);
-    } );
-    $('#selectSecond').html(toKeep);
-});
+<script>
+    var removed;
+    $('#selectFirst').change( function() {
+        var value = this.value;
+        $('#selectSecond').prepend(removed);
+        var toKeep = $('#selectSecond option').filter( function( ) {
+            return parseInt(this.value, 10) > parseInt( value, 10);
+            });
+        removed =  $('#selectSecond option').filter( function( ) {
+            return parseInt(this.value, 10) < parseInt( value, 10);
+        });
+        $('#selectSecond').html(toKeep);
+    });
 </script>
 
     <?php
-        //Delete existing data
-        $lastTableDropQuery = "DROP TABLE data_show_pol_tab";
-        $lastTableDrop = pg_query($lastTableDropQuery);
 
-        if(isset($_POST["firstAlt"]) && isset($_POST["secondAlt"]) && isset($_POST["diffAlt"]) && isset($_POST["operAlt"])){ //all values must be filled
+       if(isset($_POST["firstAlt"]) && isset($_POST["secondAlt"]) && isset($_POST["diffAlt"]) && isset($_POST["operAlt"]) && isset($_POST["upDown"])){ //both values must be filled.
             $firstYear = $_POST["firstAlt"];
             $secondYear = $_POST["secondAlt"];
-            $diff = $_POST["diffAlt"];
-            $oper = $_POST["operAlt"];
-            
-            //retype number of select to names of attribute in DB table
-            //first attribute
+
             if($firstYear == 1) {
                 $firstYear = 'altitude_1938';
             }
@@ -146,8 +152,7 @@ $('#selectFirst').change( function() {
             elseif($firstYear == 3) {
                 $firstYear = 'altitude_2000';
             }
-        
-            //second attribute
+    
             if($secondYear == 2) {
                 $secondYear = 'altitude_1951';
             }
@@ -158,42 +163,92 @@ $('#selectFirst').change( function() {
                 $secondYear = 'altitude_2020';
             }
 
+            $diff = $_POST["diffAlt"];
+            $oper = $_POST["operAlt"];
+            $plusMinus = $_POST["upDown"];
+
             //number of row based on form
             $queryNumberRow = "SELECT * FROM altitudes_holesice where ($firstYear - $secondYear) $oper $diff";
             $resultNumberRow = pg_query($queryNumberRow);    
             $rowsNumber = pg_num_rows($resultNumberRow);
+            echo $rowsNumber;
             
-            //close_db_connection, when rows is 0
-            if($rowsNumber == 0){
-                pg_close($db_connect);
-            }
-            else{
             
-            //query without LLUC
-            $query = "CREATE TABLE data_show_pol_tab as(
-                SELECT
-                    ST_NumGeometries(cluster_make),
-                    st_transform(st_concavehull(cluster_make, 0.005, true),4326) AS final_collection
-                        FROM (SELECT unnest(ST_ClusterWithin(st_transform(geom, 32633), 16)) as cluster_make
-                            FROM (SELECT * 
-                                FROM altitudes_holesice as table_main
-                                    WHERE ($firstYear - $secondYear) $oper $diff) as main_query
-                        ) as cluster_main_query
-                            WHERE st_numgeometries(cluster_make) > 5)";
+            $queryDrop = "DROP TABLE IF EXISTS show_polygon_altitude";
+            $resultOne= pg_query($queryDrop);
+            
+            if(($oper == '<' && $plusMinus == 'plus') || ($oper == '<' && $plusMinus == 'minus')) {
+                if($plusMinus == 'minus'){
+                    $diff = -($diff); //funguje
+                    echo "menší pokles";
+                    $query = "CREATE TABLE show_polygon_altitude as(
+                        SELECT
+                            ST_NumGeometries(cluster_make),
+                            st_transform(st_concavehull(cluster_make, 0.005, true),4326) AS final_collection
+                                FROM (SELECT unnest(ST_ClusterWithin(st_transform(geom, 32633), 16)) as cluster_make
+                                    FROM (SELECT * 
+                                        FROM altitudes_holesice as table_main
+                                            WHERE (($secondYear - $firstYear) between $diff and 0)) as main_query
+                                ) as cluster_main_query
+                                    WHERE st_numgeometries(cluster_make) > 20)";
+                }
+                elseif($plusMinus == 'plus'){
+                    echo "menší navýšení";
+                    $query = "CREATE TABLE show_polygon_altitude as(
+                        SELECT
+                            ST_NumGeometries(cluster_make),
+                            st_transform(st_concavehull(cluster_make, 0.005, true),4326) AS final_collection
+                                FROM (SELECT unnest(ST_ClusterWithin(st_transform(geom, 32633), 5)) as cluster_make
+                                    FROM (SELECT * 
+                                        FROM altitudes_holesice as table_main
+                                            WHERE (($firstYear - $secondYear) between 0 and $diff)) as main_query
+                                ) as cluster_main_query
+                                    WHERE st_numgeometries(cluster_make) > 20)";
+                }
                 
             }
+            else { 
+                if($plusMinus == 'plus') { //fajn skript a funguje
+                    echo "větší navýšení než 10";
+                    $query = "CREATE TABLE show_polygon_altitude as(
+                        SELECT
+                            ST_NumGeometries(cluster_make),
+                            st_transform(st_concavehull(cluster_make, 0.005, true),4326) AS final_collection
+                                FROM (SELECT unnest(ST_ClusterWithin(st_transform(geom, 32633), 16)) as cluster_make
+                                    FROM (SELECT * 
+                                        FROM altitudes_holesice as table_main
+                                            WHERE (($secondYear - $firstYear) > $diff)) as main_query
+                                ) as cluster_main_query
+                                    WHERE st_numgeometries(cluster_make) > 20)";
+                }
+                elseif($plusMinus == 'minus') {  // fajn skript a funguje
+                    echo "větší pokles než 10";
+                    $query = "CREATE TABLE show_polygon_altitude as(
+                        SELECT
+                            ST_NumGeometries(cluster_make),
+                            st_transform(st_concavehull(cluster_make, 0.005, true),4326) AS final_collection
+                                FROM (SELECT unnest(ST_ClusterWithin(st_transform(geom, 32633), 16)) as cluster_make
+                                    FROM (SELECT * 
+                                        FROM altitudes_holesice as table_main
+                                            WHERE (($firstYear - $secondYear) > $diff)) as main_query
+                                ) as cluster_main_query
+                                    WHERE st_numgeometries(cluster_make) > 20)";
+                }   
+            }
+            
             }
         else{
             echo 'Je třeba vyplnit všechna pole';
             pg_close($db_connect);
         }
         
-        $result = pg_query($query) or die('Error message: ' . pg_last_error());
-        
+        $result = pg_query($query);
+        //$result = pg_query($query) or die('Error message: ' . pg_last_error());
+        /*
         while ($row = pg_fetch_row($result)) {
             var_dump($row);
         }
-        
+        */
         //pg_free_result($result);
         pg_close($db_connect);
                 
@@ -215,7 +270,7 @@ $('#selectFirst').change( function() {
                 }
             });
         const geoServerUrl = "http://localhost:8080/geoserver/PostGIS/wms"
-        const altiLayer = "PostGIS:groupLayerCesium";
+        const altiLayer = "	PostGIS:show_polygon_altitude";
             const parameters = {
             version: '1.1.0',
             format: 'image/png',
