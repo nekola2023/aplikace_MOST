@@ -75,15 +75,15 @@
                         </select>              
                     </div>
                     <div id="checkFirst" class="col-lg">
-                        <input class="form-check-input" value="withoutLanduse" type="radio" name="LLUC" id="flexRadioDefault" checked> 
+                        <input class="form-check-input" value="withoutLanduse" type="radio" name="LLUC" id="withoutLanduse" checked> 
                         <label class="form-check-label" for="flexRadioDefault">nezobrazovat využití území</label>
                     </div>       
                     <div id="checkSecond" class="col-lg"> 
-                        <input class="form-check-input" value="oldLanduse" type="radio" name="LLUC" id="flexRadioDefault2">    
+                        <input class="form-check-input" value="oldLanduse" type="radio" name="LLUC" id="oldLanduse">    
                         <label class="form-check-label" for="flexRadioDefault2">zobrazit využití území 19. století</label>  
                     </div>
                     <div id="checkThird" class="col-lg">
-                        <input class="form-check-input" value="newLanduse" type="radio" name="LLUC" id="flexRadioDefault3">  
+                        <input class="form-check-input" value="newLanduse" type="radio" name="LLUC" id="newLanduse">  
                         <label class="form-check-label" for="flexRadioDefault3">zobrazit využití území 2019</label>
                     </div>           
                 <div id="button">
@@ -157,7 +157,12 @@
             
             
             $queryDrop = "DROP TABLE IF EXISTS show_polygon_altitude";
-            $resultOne= pg_query($queryDrop);
+            $queryDropLLUCnew = "DROP TABLE IF EXISTS lluc_created_new";
+            $queryDropLLUCold = "DROP TABLE IF EXISTS lluc_created_old";
+
+            pg_query($queryDrop);
+            pg_query($queryDropLLUCnew);
+            pg_query($queryDropLLUCold);
             
             //
             if(($oper == '<' && $plusMinus == 'plus') || ($oper == '<' && $plusMinus == 'minus')) {
@@ -180,8 +185,7 @@
                 }
                 //zobrazit záporné změny výšky větší, nežli je prahová hodnota
                 elseif($plusMinus == 'minus') {  
-                    $rulesQuery = "($firstYear - $secondYear) > $diff";
-                    
+                    $rulesQuery = "($firstYear - $secondYear) > $diff";      
                 }   
             }
 
@@ -192,28 +196,23 @@
             if(pg_num_rows($resultNumberRow) == 0) {
                 exit("Žádná existující data");
             }
-            /*
-            if() {
-
-            }
-            */
 
             $mainQuery = "CREATE TABLE show_polygon_altitude as(
-                SELECT
-                    ST_NumGeometries(cluster_make),
-                    st_transform(st_concavehull(cluster_make, 0.005, true),4326) AS final_collection
-                        FROM (SELECT unnest(ST_ClusterWithin(st_transform(geom, 32633), 16)) as cluster_make
-                            FROM (SELECT * 
-                                FROM altitudes_holesice as table_main
-                                    WHERE ($rulesQuery)) as main_query
-                        ) as cluster_main_query
-                            WHERE st_numgeometries(cluster_make) > 20)";
+                SELECT 
+		            id_collection,
+		            st_NumGeometries(cluster_make),
+		            st_transform(st_simplify(st_buffer(st_concavehull(st_transform(cluster_make,32633), 0.01, true),7.5),7),4326) AS final_collection FROM 
+			            (SELECT id_collection, st_transform(st_collect(geom),4326) as cluster_make FROM 
+				            (SELECT ST_ClusterDBSCAN(st_transform(geom, 32633), eps:= 20, minpoints := 3) over() AS id_collection, geom FROM 
+				 	            (SELECT * FROM altitudes_holesice WHERE $rulesQuery) as main_query) as geom_from_cluster
+				            GROUP by id_collection) as cluster_main_query
+		                WHERE (id_collection IS NOT NULL) and (st_numgeometries(cluster_make)) > 8)";
             
             pg_query($mainQuery);
 
             if($landUse == 'withoutLanduse'){
                 
-                $cutPolygonQuery = "UPDATE show_polygon_altitude as b
+                $result = "UPDATE show_polygon_altitude as b
                                     SET final_collection = ST_Intersection(b.final_collection, p.geom)
                                         FROM cadastral_pol as p
                                             WHERE ST_Intersects(b.final_collection, p.geom)";
@@ -221,13 +220,19 @@
             }
             else {
                 if($landUse == 'oldLanduse') {
-                    //proměnné
+                    $typeLLUC = "lluc_old";
+                    $result = "create TABLE lluc_created_old as (SELECT ST_Intersection(b.final_collection, p.geom), legend_num
+                                FROM $typeLLUC as p, show_polygon_altitude as b
+                                    WHERE ST_Intersects(p.geom, b.final_collection))";
                 }
                 elseif($landUse == 'newLanduse') {
-                    //proměnné
+                    $typeLLUC = "lluc_new";
+                    $result = "create TABLE lluc_created_new as (SELECT ST_Intersection(b.final_collection, p.geom), legend_num
+                                FROM $typeLLUC as p, show_polygon_altitude as b
+                                    WHERE ST_Intersects(p.geom, b.final_collection))";
                 }
-
-                //skript pro layout
+                
+                
             }
             
         }
@@ -235,13 +240,12 @@
             echo 'Je třeba vyplnit všechna pole';
             pg_close($db_connect);
         }
-        $result = pg_query($cutPolygonQuery) or die('Error message: ' . pg_last_error());
+        $result = pg_query($result) or die('Error message: ' . pg_last_error());
 
         while ($row = pg_fetch_row($result)) {
             echo var_dump($row);
             
         }
-        
         //pg_free_result($result);
         pg_close($db_connect);
                 
@@ -249,11 +253,26 @@
     ?>
     
     <script>
+        
+/*
+document.getElementById('register').onclick = function() {
+            var radios = document.getElementsByName('LLUC');
+            for (var radio of radios) {
+                if (radio.checked) {
+                    var showLLUC = radio.value;
+                    if(showLLUC == 'oldLanduse'){
+                        
+                    }
+                }
+            }
+        }
+        */
+    
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNDFkMDE3Yi05NTRiLTQ5NmUtYTUzZC0wOWM3NThiZDQxNTYiLCJpZCI6MTI2MTk2LCJpYXQiOjE2NzcyNTUxOTR9.kYrd0bUaaMnpHGJbWi8zHW0krp3qRTraDDPga9ziIww';
         const viewer = new Cesium.Viewer('cesiumContainer', {
             terrainProvider: Cesium.createWorldTerrain()
         });    
-    
+        
         viewer.camera.flyTo({
             destination : Cesium.Cartesian3.fromDegrees(13.55, 50.45, 5000),
             orientation : {
@@ -262,8 +281,8 @@
                 roll: Cesium.Math.toRadians(0.0),
                 }
             });
+        const altiLayer = "PostGIS:pol_with_new";
         const geoServerUrl = "http://localhost:8080/geoserver/PostGIS/wms"
-        const altiLayer = "	PostGIS:show_polygon_altitude";
             const parameters = {
             version: '1.1.0',
             format: 'image/png',
