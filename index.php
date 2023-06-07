@@ -138,7 +138,7 @@
             var layerName = "PostGIS:pol_without_LLUC";
             var altiLayer = layerName;
         } else{
-            var layerName = "PostGIS:pol_with_old";
+            var layerName = "PostGIS:pol_with_new";
             var altiLayer = layerName;
         }
         
@@ -156,8 +156,6 @@
                 roll: Cesium.Math.toRadians(0.0),
                 }
             });
-        
-        //const altiLayer = "PostGIS:pol_with_old";
 
         const geoServerUrl = "http://localhost:8080/geoserver/PostGIS/wms"
             const parameters = {
@@ -165,6 +163,8 @@
             format: 'image/png',
             srs: 'EPSG:4326',
             transparent: true,
+            tiled: true,
+            gridSet: 'EPSG:4326',
             };
 
         const webMapServiceImageryProviderOptions = {
@@ -174,7 +174,9 @@
             };
         const imageryLayer = new Cesium.ImageryLayer(new Cesium.WebMapServiceImageryProvider(webMapServiceImageryProviderOptions));
         viewer.imageryLayers.add(imageryLayer);
-        
+        if ( window.history.replaceState ) {
+            window.history.replaceState( null, null, window.location.href );
+        }
 
     </script>
 </body>

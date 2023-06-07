@@ -1,5 +1,6 @@
 <?php 
         include 'db_connection.php';
+        include 'hull.php';
         
         //druhé testování na straně backendu na úplnost formuláře
         
@@ -34,16 +35,16 @@
             $plusMinus = $_POST["upDown"];
             $landUse = $_POST['LLUC'];
 
-            
-            $queryDropBack = "DROP TABLE IF EXISTS show_polygon_altitude_backend";
+            /*
             $queryDrop = "DROP TABLE IF EXISTS show_polygon_altitude";
-            $queryDropLLUCnew = "DROP TABLE IF EXISTS lluc_created_new";
-            $queryDropLLUCold = "DROP TABLE IF EXISTS lluc_created_old";
+            $queryDropLLUCnew = "DROP TABLE IF EXISTS lluc_new_table";
+            $queryDropLLUCold = "DROP TABLE IF EXISTS lluc_old_table";
 
-            pg_query($queryDropBack);
+            
             pg_query($queryDrop);
             pg_query($queryDropLLUCnew);
             pg_query($queryDropLLUCold);
+            */
 
             
             //
@@ -82,60 +83,101 @@
                 echo $textDesc;
             }
 
-            $mainQuery = "CREATE TABLE show_polygon_altitude_backend as(
-                SELECT 
-                    st_union(st_transform(st_simplify(st_buffer(st_concavehull(st_transform(cluster_make,32633), 0.01, true),7.5),7),4326)) AS final_collection FROM 
-			            (SELECT id_collection, st_transform(st_collect(geom),4326) as cluster_make FROM 
-				            (SELECT ST_ClusterDBSCAN(st_transform(geom, 32633), eps:= 20, minpoints := 3) over() AS id_collection, geom FROM 
-				 	            (SELECT * FROM altitudes_holesice WHERE $rulesQuery) as main_query) as geom_from_cluster
-				            GROUP by id_collection) as cluster_main_query
-		                WHERE (id_collection IS NOT NULL) and (st_numgeometries(cluster_make)) > 8)";
+            $createConcave =    "(SELECT st_union(st_transform(st_simplify(st_buffer(st_concavehull(st_transform(geom_cluster,32633), 0.01, true),7.5),7),4326)) AS final_collection FROM 
+                            (SELECT id_collection, st_transform(st_collect(geom),4326) as geom_cluster FROM 
+                                (SELECT ST_ClusterDBSCAN(st_transform(geom, 32633), eps:= 20, minpoints := 3) over() AS id_collection, geom FROM 
+                                    (SELECT * FROM altitudes_holesice WHERE $rulesQuery) as main_query) as make_clusters
+                                    GROUP by id_collection) as geom_from_make_clusters
+                                WHERE (id_collection IS NOT NULL) and (st_numgeometries(geom_cluster)) > 8) as concave_hull";
             
-            pg_query($mainQuery);
 
             if($landUse == 'withoutLanduse'){
                 
-                $result = "CREATE TABLE show_polygon_altitude as(
+                $result =   "CREATE OR REPLACE VIEW output_basic_view AS(
                     SELECT 
-                        round((cast(st_area(st_transform(final_collection,32633))/1000000 as numeric)),3) as rozloha_vystupu_v_km2, 
-                        round(cast((st_area(st_transform(final_collection,32633))/1000000) / 6.04 * 100 as numeric),2) as procento_vystupu_v_KU,
-                        final_collection FROM (
-                            SELECT
-                                ST_Intersection(b.final_collection, p.geom) as final_collection
-                                    FROM cadastral_pol as p, show_polygon_altitude_backend as b
-                                        WHERE ST_Intersects(b.final_collection, p.geom)) as intersected_data);";
+                            round((cast(st_area(st_transform(final_collection,32633))/1000000 as numeric)),3) as all_area, 
+                            round(cast((st_area(st_transform(final_collection,32633))/1000000) / 6.04 * 100 as numeric),2) as procent_to_ku,
+                            final_collection FROM (
+                                SELECT
+                                    ST_Intersection(concave_hull.final_collection, cadastral_pol.geom) as final_collection
+                                        FROM cadastral_pol, $createConcave
+                                            WHERE ST_Intersects(concave_hull.final_collection, cadastral_pol.geom)) as intersected_data)";
   
             }
             else {
                 if($landUse == 'oldLanduse') {
-                    $result = "UPDATE show_polygon_altitude_backend as b
-                                    SET final_collection = ST_Intersection(b.final_collection, p.geom)
-                                        FROM cadastral_pol as p
-                                            WHERE ST_Intersects(b.final_collection, p.geom)";
-                    pg_query($result);
                     
-                    $typeLLUC = "lluc_old";
-                    $result = "create TABLE lluc_created_old as (
+                    $result = "CREATE OR REPLACE VIEW output_old_view as (     
                         SELECT 
-                        round(cast((st_area(st_transform(final_collection,32633))/1000000) / 6.04 * 100 as numeric),2) as procento_vystupu_vKU,
-                        round(cast((st_area(st_transform(final_shape,32633))/1000000) / 6.04 * 100 as numeric),2) as procento_vystupu_v_KU,
-                        round((cast(st_area(st_transform(final_shape,32633))/1000000 as numeric)),3) as rozloha_vystupu_celkem, 
-                        round((cast(st_area(st_transform(final_collection,32633))/1000000 as numeric)),3) as rozloha_vystupu_v_km2, 
                         final_shape,
                         legend_nam,
-                        legend_num FROM(
+                        legend_num,
+                        all_area,
+                        procent_to_ku,
+                        round((cast(st_area(st_transform(final_shape,32633))/1000000 as numeric)),3) as attr_area, 
+                        round((round((cast(st_area(st_transform(final_shape,32633))/1000000 as numeric)),3) / all_area * 100 ),2) as procent_LLUC_to_output 	
+                         FROM(
                             SELECT 
-                                p.legend_nam,
-                                p.legend_num,
-                                ST_Intersection(b.final_collection, p.geom) as final_shape
-                                    FROM lluc_old as p, show_polygon_altitude_backend as b
-                                        WHERE ST_Intersects(p.geom, b.final_collection)) as intersected_data, show_polygon_altitude_backend)";
+                                *,
+                                ST_Intersection(output_area.final_collection, lluc.geom) as final_shape
+                                    FROM lluc_old as lluc, (  
+                                    SELECT 
+                                        round((cast(st_area(st_transform(final_collection,32633))/1000000 as numeric)),3) as all_area, 
+                                        round(cast((st_area(st_transform(final_collection,32633))/1000000) / 6.04 * 100 as numeric),2) as procent_to_ku,
+                                        final_collection FROM (
+                                            SELECT
+                                                ST_Intersection(concave_hull.final_collection, cadastral_pol.geom) as final_collection
+                                                    FROM cadastral_pol, (SELECT st_union(st_transform(st_simplify(st_buffer(st_concavehull(st_transform(geom_cluster,32633), 0.01, true),7.5),7),4326)) AS final_collection FROM 
+                                                        (SELECT id_collection, st_transform(st_collect(geom),4326) as geom_cluster FROM 
+                                                            (SELECT ST_ClusterDBSCAN(st_transform(geom, 32633), eps:= 20, minpoints := 3) over() AS id_collection, geom FROM 
+                                                                (SELECT * FROM altitudes_holesice WHERE (altitude_1938 - altitude_2020) > 90) as main_query) as make_clusters
+                                                                GROUP by id_collection) as geom_from_make_clusters
+                                                            WHERE (id_collection IS NOT NULL) and (st_numgeometries(geom_cluster)) > 8) as concave_hull
+                                                        WHERE ST_Intersects(concave_hull.final_collection, cadastral_pol.geom)) as intersected_data             
+                                                ) as output_area
+                                                    WHERE ST_Intersects(lluc.geom, output_area.final_collection)) as intersected_data)";
                 }
                 elseif($landUse == 'newLanduse') {
-                    $typeLLUC = "lluc_new";
-                    $result = "create TABLE lluc_created_new as (SELECT ST_Intersection(b.final_collection, p.geom), legend_num
-                                FROM $typeLLUC as p, show_polygon_altitude_backend as b
-                                    WHERE ST_Intersects(p.geom, b.final_collection))";
+                    $result = "CREATE OR REPLACE VIEW output_new_view as (
+                        SELECT
+                    final_shape_new as geom, 	
+                    data_new.all_area, 	
+                    attribute_area_old, 	
+                    attribute_area_new,	
+                    round((attribute_area_new / data_new.all_area  * 100),3) as procent_to_KU, 	
+                    round((data_new.all_area / 6.04 * 100 ),2) as procent_LLUC_to_output, 	 	 	
+                    data_new.legend_nam, 	
+                    data_new.legend_num::varchar(5),
+                    (attribute_area_new/attribute_area_old) * 100 as compare_area
+                        FROM (SELECT  	
+                            round((cast(st_area(st_transform(final_shape_old,32633))/1000000 as numeric)),3) as attribute_area_old,  	
+                            round((cast(st_area(st_transform(final_collection,32633))/1000000 as numeric)),3) as all_area,  	
+                            final_shape_old, 	
+                            legend_num, 	
+                            legend_nam FROM( 		
+                                SELECT  			
+                                    lluc_old.legend_nam, 			
+                                    lluc_old.legend_num, 
+                                    final_collection,			
+                                    ST_Intersection(concave_hull.final_collection, lluc_old.geom) as final_shape_old 				
+                                        FROM lluc_old, $createConcave 					
+                                            WHERE ST_Intersects(lluc_old.geom, concave_hull.final_collection)) as intersected_data) as data_old 
+                            right outer join (SELECT  	
+                                round((cast(st_area(st_transform(final_shape_new,32633))/1000000 as numeric)),3) as attribute_area_new,  	
+                                round((cast(st_area(st_transform(final_collection,32633))/1000000 as numeric)),3) as all_area,  	
+                                final_shape_new, 	
+                                final_collection, 	
+                                legend_num, 	
+                                legend_nam FROM( 		
+                                    SELECT  			
+                                        lluc_new.legend_nam, 			
+                                        lluc_new.legend_num, 	
+                                        final_collection,
+                                        ST_Intersection(concave_hull.final_collection, lluc_new.geom) as final_shape_new 				
+                                            FROM lluc_new, $createConcave 					
+                                                WHERE ST_Intersects(lluc_new.geom, concave_hull.final_collection)) as intersected_data) as data_new 
+                                on data_new.legend_nam = data_old.legend_nam)";
+                    
                 }
                 
                 
