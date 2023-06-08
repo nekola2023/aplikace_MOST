@@ -46,3 +46,6 @@ img {
 small {
     text-align: center;
 }
+button.cesium-infoBox-camera {
+    display:none;
+    }

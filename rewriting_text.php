@@ -1,30 +1,34 @@
 <?php
     $firstYearName = $_POST["firstAlt"];
     $secondYearName = $_POST["secondAlt"];
-    $operName = $_POST["diffAlt"];
     $plusMinusName = $_POST["upDown"];
     $landUseName = $_POST['LLUC'];
+    $diffName = $_POST["diffAlt"];
+    $operName = $_POST["operAlt"];
 
-    if($firstYearName == 'altitude_1938'){
+    //change value of firstYear attribute
+    if($firstYearName == '1'){
         $firstYearName = '1938';
-    } elseif($firstYearName == 'altitude_1950'){
+    } elseif($firstYearName == '2'){
         $firstYearName ='1951';
     } else{
         $firstYearName ='2000';
     }
 
-    if($secondYearName == 'altitude_1950'){
+    //change value of secondYear attribute
+    if($secondYearName == '2'){
         $secondYearName = '1951';
-    } elseif($secondYearName == 'altitude_2000'){
+    } elseif($secondYearName == '3'){
         $secondYearName ='2000';
     } else{
         $secondYearName ='2020';
     }
 
     if($operName == '>'){
-        $operName = 'menší';
+        $operName = 'větší';
+        //$diffName = -$diffName;
     } else{
-        $operName ='větší';
+        $operName ='menší';
     }
 
     if($plusMinusName == 'minus'){

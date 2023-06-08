@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diplomová práce</title>
+    <title>Mapová aplikace Holešice</title>
     <script src="https://cesium.com/downloads/cesiumjs/releases/1.105/Build/Cesium/Cesium.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
@@ -15,6 +15,7 @@
     <link href="https://cesium.com/downloads/cesiumjs/releases/1.105/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="css/appCesium.css">
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
     <style>
         #cesiumContainer {
             position: relative;
@@ -30,7 +31,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-lg-3 bg-light">    
-        <h2 id="header">Porovnání změny území <b>MOSTECKO</b></h2>
+        <h2 id="header">Porovnání změny území <b>HOLEŠICE</b></h2>
             <form action="index.php" method="post">
                     <div class="col-lg">
                         <small class="form-text text-muted">Zobrazit plochu o</small>
@@ -104,8 +105,10 @@
         </div>
         <div class="col-lg-9 bg-light">
             <div id="cesiumContainer">
+            <input type="checkbox" id="checkboxing" name="vehicle1" value="Bike">
             
                 <p class="text-center font-weight-bold text-uppercase"><?php include("query_altitudes.php"); ?></p>
+                <img src="http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:output_old_view_materialized" alt="Legenda">
             
 
             </div>
@@ -115,6 +118,7 @@
 </div> 
 
 <script>
+    
     var removed;
     $('#selectFirst').change( function() {
         var value = this.value;
@@ -129,6 +133,24 @@
     });
 </script>
     <script>
+        const element = document.getElementById("checkboxing");
+        element.addEventListener('change', (event) => {
+            if (event.target.checked) {
+                const buildingTileset = viewer.scene.primitives.add(Cesium.createOsmBuildings());
+            } else {
+                buildingTileset.show = viewer.scene.primitives.remove(Cesium.createOsmBuildings()); 
+            }
+})
+        
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNDFkMDE3Yi05NTRiLTQ5NmUtYTUzZC0wOWM3NThiZDQxNTYiLCJpZCI6MTI2MTk2LCJpYXQiOjE2NzcyNTUxOTR9.kYrd0bUaaMnpHGJbWi8zHW0krp3qRTraDDPga9ziIww';
+        const viewer = new Cesium.Viewer('cesiumContainer', {
+            terrainProvider: Cesium.createWorldTerrain(),
+            imageryProvider: Cesium.createWorldImagery({
+                    style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS
+             })
+        });    
+        
+        
         var layerName = "<?php echo $landUse; ?>";
         
         if(layerName === 'oldLanduse'){
@@ -137,17 +159,14 @@
         } else if(layerName === 'withoutLanduse'){
             var layerName = "PostGIS:pol_without_LLUC";
             var altiLayer = layerName;
+            
         } else{
             var layerName = "PostGIS:pol_with_new";
             var altiLayer = layerName;
+             
         }
-        
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNDFkMDE3Yi05NTRiLTQ5NmUtYTUzZC0wOWM3NThiZDQxNTYiLCJpZCI6MTI2MTk2LCJpYXQiOjE2NzcyNTUxOTR9.kYrd0bUaaMnpHGJbWi8zHW0krp3qRTraDDPga9ziIww';
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-            terrainProvider: Cesium.createWorldTerrain()
 
-        });    
-        
+
         viewer.camera.flyTo({
             destination : Cesium.Cartesian3.fromDegrees(13.55, 50.45, 5000),
             orientation : {
@@ -165,19 +184,22 @@
             transparent: true,
             tiled: true,
             gridSet: 'EPSG:4326',
+            
             };
 
         const webMapServiceImageryProviderOptions = {
             url: geoServerUrl,
             layers: altiLayer,
             parameters: parameters,
+            
             };
         const imageryLayer = new Cesium.ImageryLayer(new Cesium.WebMapServiceImageryProvider(webMapServiceImageryProviderOptions));
         viewer.imageryLayers.add(imageryLayer);
+        /*
         if ( window.history.replaceState ) {
             window.history.replaceState( null, null, window.location.href );
         }
-
+        */
     </script>
 </body>
 </html>
