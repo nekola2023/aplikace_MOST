@@ -1,4 +1,3 @@
-<?php ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,20 +16,74 @@
     <link rel="stylesheet" href="css/appCesium.css">
     <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
     <style>
+        body{
+            background-color: #ececec;
+        }
         #cesiumContainer {
             position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            border: 5px solid #c5c5c5;  
+            z-index: 0;
         }
         body{
             padding: 0;
             margin: 0;
+        }
+        #legendImage{
+            background-color: #fff;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            border: 5px solid #c5c5c5;    
+        }
+        @media (max-width: 992px) {
+            .fixed-top {
+                position:relative;
+                height: 150%;
+            }
+        }
+        #legendDiv{
+            top:-15px;
+            position: absolute;
+            left: 7px;
+            z-index: 150;
+            opacity: 0.75;
+        }
+
+        #legendDiv:hover{
+            opacity:1;
+        }
+        #descDiv{
+            display: block;
+            position: absolute;
+            bottom: 30px;
+            z-index: 150;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 10px;
+            margin:0px;
+            border-style:solid;
+            border-color:#c5c5c5;
+            background-color:#fff;
+            text-align:center;
+            opacity: 0.75;
+            left:0;
+            right:0;
             
+        }
+        #descDiv:hover{
+            opacity: 1;
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-lg-3 bg-light">    
+        <div class="col-lg-3 one h-100">    
         <h2 id="header">Porovnání změny území <b>HOLEŠICE</b></h2>
             <form action="index.php" method="post">
                     <div class="col-lg">
@@ -81,18 +134,18 @@
                     </div>       
                     <div id="checkSecond" class="col-lg"> 
                         <input class="form-check-input" value="oldLanduse" type="radio" name="LLUC" id="Landuse">    
-                        <label class="form-check-label" for="flexRadioDefault2">zobrazit využití území 19. století</label>  
+                        <label class="form-check-label" for="flexRadioDefault">zobrazit využití území 19. století</label>  
                     </div>
                     <div id="checkThird" class="col-lg">
                         <input class="form-check-input" value="newLanduse" type="radio" name="LLUC" id="Landuse">  
                         <label class="form-check-label" for="flexRadioDefault3">zobrazit využití území 2019</label>
                     </div>           
                 <div id="button">
-                    <input type="submit" id="register" value="ZOBRAZIT DATA" class="btn btn-success btn-lg btn-block">
+                    <input type="submit" id="register" value="ZOBRAZIT DATA" class="btn btn-outline-primary btn-lg btn-block">
                     
                 </div>     
             </form>
-            <div id="picture" class="col-lg pt-4 pb-2">
+            <div id="picture" class="col-lg pt-5 mt-5 pb-2">
                 <a href="https://www.natur.cuni.cz/fakulta">
                     <img src="img/UK_nature.PNG" alt="Přf UK" width="170" height="170">
                 </a>
@@ -102,15 +155,16 @@
                 <p id="inputDiff"></p>
             </div>
             
+            
         </div>
-        <div class="col-lg-9 bg-light">
+        <div class="col-lg-9 offset-lg-3 fixed-top two h-100">
             <div id="cesiumContainer">
-            <input type="checkbox" id="checkboxing" name="vehicle1" value="Bike">
-            
+            <div class="pt-4" id="legendDiv">
+                <img src = imageshown id="legendImage">
+            </div>
+            <div id="descDiv">
                 <p class="text-center font-weight-bold text-uppercase"><?php include("query_altitudes.php"); ?></p>
-                <img src="http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:output_old_view_materialized" alt="Legenda">
-            
-
+            </div>
             </div>
         </div>
         
@@ -133,6 +187,8 @@
     });
 </script>
     <script>
+        
+        /*
         const element = document.getElementById("checkboxing");
         element.addEventListener('change', (event) => {
             if (event.target.checked) {
@@ -140,7 +196,7 @@
             } else {
                 buildingTileset.show = viewer.scene.primitives.remove(Cesium.createOsmBuildings()); 
             }
-})
+})*/
         
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNDFkMDE3Yi05NTRiLTQ5NmUtYTUzZC0wOWM3NThiZDQxNTYiLCJpZCI6MTI2MTk2LCJpYXQiOjE2NzcyNTUxOTR9.kYrd0bUaaMnpHGJbWi8zHW0krp3qRTraDDPga9ziIww';
         const viewer = new Cesium.Viewer('cesiumContainer', {
@@ -150,32 +206,44 @@
              })
         });    
         
+        var altiLayer = "PostGIS:cadastral_line";
+        var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:cadastral_line&LEGEND_OPTIONS=forceLabels:on";
         
-        var layerName = "<?php echo $landUse; ?>";
+        var layerName = "<?php
+                            if(isset($_POST["LLUC"])){
+                                echo $landUse;
+                            } 
+                        ?>";
         
         if(layerName === 'oldLanduse'){
-        var layerName = "PostGIS:pol_with_old";
-        var altiLayer = layerName;
+            var layerName = "PostGIS:pol_with_old";
+            var altiLayer = layerName;
+            var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:pol_with_old";
         } else if(layerName === 'withoutLanduse'){
             var layerName = "PostGIS:pol_without_LLUC";
             var altiLayer = layerName;
-            
-        } else{
+            var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:pol_without_LLUC";
+        } else if(layerName === 'newLanduse'){
             var layerName = "PostGIS:pol_with_new";
             var altiLayer = layerName;
-             
+            var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:pol_with_new";
         }
+
+        document.getElementById('legendImage').src = imageshown;
+        
 
 
         viewer.camera.flyTo({
-            destination : Cesium.Cartesian3.fromDegrees(13.55, 50.45, 5000),
+            destination : Cesium.Cartesian3.fromDegrees(13.55, 50.47, 1200),
             orientation : {
                 heading : Cesium.Math.toRadians(0.0),
-                pitch : Cesium.Math.toRadians(-40.0),
+                pitch : Cesium.Math.toRadians(-15.0),
                 roll: Cesium.Math.toRadians(0.0),
                 }
             });
 
+        
+        
         const geoServerUrl = "http://localhost:8080/geoserver/PostGIS/wms"
             const parameters = {
             version: '1.1.0',
@@ -195,11 +263,11 @@
             };
         const imageryLayer = new Cesium.ImageryLayer(new Cesium.WebMapServiceImageryProvider(webMapServiceImageryProviderOptions));
         viewer.imageryLayers.add(imageryLayer);
-        /*
+        
         if ( window.history.replaceState ) {
             window.history.replaceState( null, null, window.location.href );
         }
-        */
+        
     </script>
 </body>
 </html>

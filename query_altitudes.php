@@ -1,10 +1,12 @@
 <?php 
+        
         include 'db_connection.php';
         include 'hull.php';
-        
         //druhé testování na straně backendu na úplnost formuláře
         
         if(isset($_POST["firstAlt"]) && isset($_POST["secondAlt"]) && isset($_POST["diffAlt"]) && isset($_POST["operAlt"]) && isset($_POST["upDown"]) && ($_POST["LLUC"])){ //both values must be filled.
+            
+            
             $firstYear = $_POST["firstAlt"];
             $secondYear = $_POST["secondAlt"];
             //přetypování proměnné prvního roku z čísla na string
@@ -28,25 +30,15 @@
             elseif($secondYear == 4) {
                 $secondYear = 'altitude_2020';
             }
-
+            if($secondYear == $firstYear){
+                exit("Zadal jsi stejná období pro porovnání");
+            }
             //přeno zbylých proměnných
             $diff = $_POST["diffAlt"];
             $oper = $_POST["operAlt"];
             $plusMinus = $_POST["upDown"];
             $landUse = $_POST['LLUC'];
-
-            //plus mínus je navýšení a pokles
-            
-            //$queryDropLLUCnew = "DROP TABLE IF EXISTS lluc_new_table";
-            //$queryDropLLUCold = "DROP TABLE IF EXISTS lluc_old_table";
-
-            
-            
-            //pg_query($queryDropLLUCnew);
-            //pg_query($queryDropLLUCold);
-            
-
-            
+                     
             //
             if(($oper == '<' && $plusMinus == 'plus') || ($oper == '<' && $plusMinus == 'minus')) {
                 //
@@ -75,13 +67,15 @@
             $resultNumberRow = pg_query($queryNumberRow);    
             
             if(pg_num_rows($resultNumberRow) == 0) {
-                exit("Žádná existující data");
+                $landUse = "";
+                echo '<span style="color:red;">VÝSTUP PRO ZVOLENÝ VZOREK DAT NEEXISTUJE!</span>';
+
             }
             else{
                 include 'rewriting_text.php';
                 $textDesc = "Zobrazena jsou data reprezentující $plusMinusName $operName než $diffName metrů, a to mezi lety $firstYearName a $secondYearName";
                 echo $textDesc;
-            }
+            
 
             $createConcave =    "(SELECT st_union(st_transform(st_simplify(st_buffer(st_concavehull(st_transform(geom_cluster,32633), 0.01, true),7.5),7),4326)) AS final_collection FROM 
                                     (SELECT id_collection, st_transform(st_collect(geom),4326) as geom_cluster FROM 
@@ -198,14 +192,15 @@
 
             while ($row = pg_fetch_row($result)) {
                 echo var_dump($row);
-            
-        }
-        //pg_free_result($result);
-        pg_close($db_connect);
+            }
+        
+            //pg_free_result($result);
+            pg_close($db_connect);
+            }
         }
         else{
-            echo 'Je třeba vyplnit všechna pole';
-            pg_close($db_connect);
+            echo 'Žádná data nejsou prozatím zobrazena';
+            
         }
         
         
