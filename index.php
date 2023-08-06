@@ -56,6 +56,13 @@
                     visibility: hidden;
                     position:absolute;
                 }
+                #footerM{
+                    padding-top: 25px;
+                    text-align: center;
+                }
+                #descDiv{
+                    visibility: hidden;
+                }
             }
 
             /*Nastavení desktop layoutu pro zařízení o miximální šířce*/
@@ -72,9 +79,15 @@
                 }
                 #legendDivM{
                     visibility: hidden;
+                    padding: 0px;
+                    position: absolute;
+                    padding-bottom: 25px;
                 }
                 #footerM{
                     visibility:hidden;
+                }
+                #descDivM{
+                    visibility: hidden;
                 }
             }
 
@@ -99,6 +112,19 @@
             #descDiv:hover{
                 opacity: 1;
                 text-decoration: underline;
+            }
+            #descDivM{
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-top: 10px;
+                margin:0px;
+                border-style:solid;
+                border-color:#c5c5c5;
+                background-color:#fff;
+                text-align:center;
+                opacity: 0.75;
+                left:0;
+                right:0; 
             }
         </style>
     </head>
@@ -174,12 +200,12 @@
                             </a>
                         </div>
                         <div class="col-lg" id="footer">
-                            <p>Tato aplikace je výstupem diplomové práce Lukáše Nekoly v rámci studia na Přírodověděcké Katedře Univerzity Karlovy.</p>
+                            <p>Tato aplikace je výstupem diplomové práce Lukáše Nekoly v rámci studia na Přírodověděcké fakultě Univerzity Karlovy.</p>
                             <p id="inputDiff"></p>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-9 offset-lg-3 fixed-top two h-100">
+                <div class="col-lg-9 offset-lg-3 fixed-top two h-100 mapM">
                     <div id="cesiumContainer">
                         <div class="pt-4" id="legendDiv">
                             <img src = imageshown id="legendImage">
@@ -188,13 +214,16 @@
                             <p class="text-center font-weight-bold text-uppercase"><?php include("query_altitudes.php"); ?></p>
                         </div>
                     </div>
+                    <div id="descDivM">
+                            <p class="text-center font-weight-bold text-uppercase"><?php include("query_altitudes.php"); ?></p>
+                        </div>
                     <div id="footerM">
                         <div id="picture" class="col-lg pb-2">
                             <a href="https://www.natur.cuni.cz/fakulta">
                                 <img src="img/UK_nature.PNG" alt="Přf UK" width="170" height="170">
                             </a>
                         </div>
-                        <div class="col-lg" id="footer">
+                        <div class="col-lg" id="footerM">
                             <p>Tato aplikace je výstupem diplomové práce Lukáše Nekoly v rámci studia na Přírodověděcké fakultě Univerzity Karlovy.</p>
                             <p id="inputDiff"></p>
                         </div>
@@ -221,6 +250,11 @@
             //zpřístupnění cloudové platformy Cesium Ion pomocí API tokenu
             Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNDFkMDE3Yi05NTRiLTQ5NmUtYTUzZC0wOWM3NThiZDQxNTYiLCJpZCI6MTI2MTk2LCJpYXQiOjE2NzcyNTUxOTR9.kYrd0bUaaMnpHGJbWi8zHW0krp3qRTraDDPga9ziIww';
             
+            //přiblížení se na základě domácího tlačítka -> přiblížení je nastaveno v kolmém pohledu
+            var extent = Cesium.Rectangle.fromDegrees(13.535, 50.48, 13.575, 50.52);
+            Cesium.Camera.DEFAULT_VIEW_RECTANGLE = extent;
+            Cesium.Camera.DEFAULT_VIEW_FACTOR = 0;
+
             //zobrazení Cesium Globe v div s ID cesiumContainer    
             const viewer = new Cesium.Viewer('cesiumContainer', {
                 terrainProvider: Cesium.createWorldTerrain(), //načtení  globálního DMT obsaženého v Cesium ION
@@ -297,6 +331,7 @@
             if ( window.history.replaceState ) {
                 window.history.replaceState( null, null, window.location.href );
             }
+            
             
         </script>
     </body>
