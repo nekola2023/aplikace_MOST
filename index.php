@@ -18,6 +18,8 @@
             body{
                 background-color: #ececec;
             }
+
+            /*zobrazení samotného mapového pole v celém kontejneru i při jeho změně*/
             #cesiumContainer {
                 position: relative;
                 overflow: hidden;
@@ -55,6 +57,7 @@
                     position:absolute;
                 }
             }
+
             /*Nastavení desktop layoutu pro zařízení o miximální šířce*/
             @media (min-width: 992px) {
                 #legendDiv{
@@ -74,6 +77,8 @@
                     visibility:hidden;
                 }
             }
+
+            /*návrh textového pole a pozadí pro zobrazení textového výstupu, který pojednává o zobrazených datech*/
             #descDiv{
                 display: block;
                 position: absolute;
@@ -190,103 +195,108 @@
                             </a>
                         </div>
                         <div class="col-lg" id="footer">
-                            <p>Tato aplikace je výstupem diplomové práce Lukáše Nekoly v rámci studia na Přírodověděcké Katedře Univerzity Karlovy.</p>
+                            <p>Tato aplikace je výstupem diplomové práce Lukáše Nekoly v rámci studia na Přírodověděcké fakultě Univerzity Karlovy.</p>
                             <p id="inputDiff"></p>
                         </div>
                     </div>
                 </div>    
             </div>
         </div> 
-    <script>
+        <script>
         
-        //JQUERY pro zamezení výběru stejného období a menší hodnoty prvního selectu
-        var removed;
-        $('#selectFirst').change(function() {
-            var value = this.value;
-            $('#selectSecond').prepend(removed);
-            var toKeep = $('#selectSecond option').filter( function( ) {
-                return parseInt(this.value, 10) > parseInt(value, 10);
+            //JQUERY pro zamezení výběru stejného období a menší hodnoty prvního selectu
+            var removed;
+            $('#selectFirst').change(function() {
+                var value = this.value;
+                $('#selectSecond').prepend(removed);
+                var toKeep = $('#selectSecond option').filter( function( ) {
+                    return parseInt(this.value, 10) > parseInt(value, 10);
+                    });
+                removed =  $('#selectSecond option').filter( function( ) {
+                    return parseInt(this.value, 10) <= parseInt(value, 10);
                 });
-            removed =  $('#selectSecond option').filter( function( ) {
-                return parseInt(this.value, 10) <= parseInt(value, 10);
+                $('#selectSecond').html(toKeep);
             });
-            $('#selectSecond').html(toKeep);
-        });
 
-        //Zpřístupnění 
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNDFkMDE3Yi05NTRiLTQ5NmUtYTUzZC0wOWM3NThiZDQxNTYiLCJpZCI6MTI2MTk2LCJpYXQiOjE2NzcyNTUxOTR9.kYrd0bUaaMnpHGJbWi8zHW0krp3qRTraDDPga9ziIww';
-        
-        //Zobrazení Cesium Globe v div s ID cesiumContainer    
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-            terrainProvider: Cesium.createWorldTerrain(), //načtení terénu obsaženého v Cesium ION
-            imageryProvider: Cesium.createWorldImagery({
-                    style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS //Nastavení defaultních snímků s lables z důvodu lepšího přehledu
-            })
-        });    
-        
-        //Nastavení parametrů pro načtení katastrální hranice s legendou při spuštění aplikace achbném odeslání formuláře
-        var altiLayer = "PostGIS:cadastral_line";
-        var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:cadastral_line&LEGEND_OPTIONS=forceLabels:on";
-        
-        //Ošetření, že se parametr s vybraným LLUC nepošle do JS v případě jeho neexistence
-        var layerName = "<?php
-                            if(isset($_POST["LLUC"])){
-                                echo $landUse;
-                            } 
-                        ?>";
-        
-        //Pravidla pro výběr požadované vrstvy a legendy    
-        if(layerName === 'oldLanduse'){
-            var layerName = "PostGIS:pol_with_old";
-            var altiLayer = layerName;
-            var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:pol_with_old";
-        } else if(layerName === 'withoutLanduse'){
-            var layerName = "PostGIS:pol_without_LLUC";
-            var altiLayer = layerName;
-            var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:pol_without_LLUC";
-        } else if(layerName === 'newLanduse'){
-            var layerName = "PostGIS:pol_with_new";
-            var altiLayer = layerName;
-            var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:pol_with_new";
-        }
-
-        //Předání URL adresy patřičné legendy tagům IMG pro mobilní i desktopovou verzi
-        document.getElementById('legendImage').src = imageshown; //********** */
-        document.getElementById('legendImageM').src = imageshown;//********** */
-        
-        //Počáteční pohled na konkrétní XYZ souřadnice včetně animace
-        viewer.camera.flyTo({
-            destination : Cesium.Cartesian3.fromDegrees(13.55, 50.47, 1200),
-            orientation : {
-                heading : Cesium.Math.toRadians(0.0),
-                pitch : Cesium.Math.toRadians(-15.0),
-                roll: Cesium.Math.toRadians(0.0),
-             }
-        });
-  
-        //Nastavení přístupu pro GeoServer
-        const geoServerUrl = "http://localhost:8080/geoserver/PostGIS/wms";
-        const parameters = {
-            version: '1.1.0',
-            format: 'image/png',
-            srs: 'EPSG:4326',
-            transparent: true,
-            tiled: true,
-            gridSet: 'EPSG:4326',     
-        };
-
-        const webMapServiceImageryProviderOptions = {
-            url: geoServerUrl,
-            layers: altiLayer,
-            parameters: parameters,
-        };
+            //zpřístupnění cloudové platformy Cesium Ion pomocí API tokenu
+            Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNDFkMDE3Yi05NTRiLTQ5NmUtYTUzZC0wOWM3NThiZDQxNTYiLCJpZCI6MTI2MTk2LCJpYXQiOjE2NzcyNTUxOTR9.kYrd0bUaaMnpHGJbWi8zHW0krp3qRTraDDPga9ziIww';
             
-        const imageryLayer = new Cesium.ImageryLayer(new Cesium.WebMapServiceImageryProvider(webMapServiceImageryProviderOptions));
-        viewer.imageryLayers.add(imageryLayer);
+            //zobrazení Cesium Globe v div s ID cesiumContainer    
+            const viewer = new Cesium.Viewer('cesiumContainer', {
+                terrainProvider: Cesium.createWorldTerrain(), //načtení  globálního DMT obsaženého v Cesium ION
+                imageryProvider: Cesium.createWorldImagery({
+                        style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS //nastavení defaultních snímků s lables z důvodu lepšího přehledu
+                })
+            });    
             
-        if ( window.history.replaceState ) {
-            window.history.replaceState( null, null, window.location.href );
-        }
+            //nastavení parametrů pro načtení katastrální hranice s legendou při spuštění aplikace a chybném odeslání formuláře
+            var altiLayer = "PostGIS:cadastral_line";
+            var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:cadastral_line&LEGEND_OPTIONS=forceLabels:on";
+            
+            //ošetření, že se parametr s vybraným využitím nepošle do JS v případě jeho neexistence -> zamezuje to zobrazení dříve uložených materializovaných pohledů v databázi
+            var layerName = "<?php
+                                if(isset($_POST["LLUC"])){
+                                    echo $landUse;
+                                } 
+                            ?>";
+            
+            //pravidla pro výběr požadované vrstvy a legendy na základě informace z formuláře 
+            if(layerName === 'oldLanduse'){
+                var layerName = "PostGIS:pol_with_old";
+                var altiLayer = layerName;
+                var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:pol_with_old";
+            } else if(layerName === 'withoutLanduse'){
+                var layerName = "PostGIS:pol_without_LLUC";
+                var altiLayer = layerName;
+                var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:pol_without_LLUC";
+            } else if(layerName === 'newLanduse'){
+                var layerName = "PostGIS:pol_with_new";
+                var altiLayer = layerName;
+                var imageshown = "http://localhost:8080/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=PostGIS:pol_with_new";
+            }
+
+            //předání URL adresy patřičné legendy tagům IMG pro mobilní i desktopovou verzi
+            document.getElementById('legendImage').src = imageshown; /*předání legendy do uživatelského rozhraní v desktopové podobě*/
+            document.getElementById('legendImageM').src = imageshown;/*předání legendy do uživatelského rozhraní v mobilní podobě*/
+            
+            //počáteční pohled na konkrétní XYZ souřadnice včetně animace
+            viewer.camera.flyTo({
+                destination : Cesium.Cartesian3.fromDegrees(13.55, 50.47, 1200),
+                orientation : {
+                    heading : Cesium.Math.toRadians(0.0),
+                    pitch : Cesium.Math.toRadians(-15.0),
+                    roll: Cesium.Math.toRadians(0.0),
+                }
+            });
+    
+            //nastavení přístupu pro GeoServer
+            const geoServerUrl = "http://localhost:8080/geoserver/PostGIS/wms";
+
+            //nastavení parametrů WMTS 
+            const parameters = {
+                version: '1.1.0',
+                format: 'image/png',
+                srs: 'EPSG:4326',
+                transparent: true,
+                tiled: true,
+                gridSet: 'EPSG:4326',     
+            };
+
+            //sjednocení nastavení mapové služby pro následní vyvolání metodou WebMapServiceImageryProvider
+            const webMapServiceImageryProviderOptions = {
+                url: geoServerUrl,
+                layers: altiLayer,
+                parameters: parameters,
+            };
+                
+            //zpřístupnění mapové služby do mapového pole Cesium
+            const imageryLayer = new Cesium.ImageryLayer(new Cesium.WebMapServiceImageryProvider(webMapServiceImageryProviderOptions));
+            viewer.imageryLayers.add(imageryLayer);
+                
+            //kód pro zamezení opětovného odeslání formuláře při obnovení stránky
+            if ( window.history.replaceState ) {
+                window.history.replaceState( null, null, window.location.href );
+            }
             
         </script>
     </body>

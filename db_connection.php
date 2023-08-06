@@ -1,5 +1,5 @@
 <?php
-    //Parametry pro připojení k databázi
+    //Parametry pro připojení k databázi -> volitelné na základě konkrétní databáze
     $host = 'localhost';
     $port = '5432';
     $dbname = 'Cesium_app';

@@ -1,4 +1,6 @@
 <?php
+
+    //převzetí proměnných ze strany klienta pro následné přepsání pro účely textového výstupu
     $firstYearName = $_POST["firstAlt"];
     $secondYearName = $_POST["secondAlt"];
     $plusMinusName = $_POST["upDown"];
@@ -6,7 +8,7 @@
     $diffName = $_POST["diffAlt"];
     $operName = $_POST["operAlt"];
 
-    //change value of firstYear attribute
+    //změna hodnoty proměnné prvního roku
     if($firstYearName == '1'){
         $firstYearName = '1938';
     } elseif($firstYearName == '2'){
@@ -15,7 +17,7 @@
         $firstYearName ='2000';
     }
 
-    //change value of secondYear attribute
+    //změna hodnoty proměnné druhého roku
     if($secondYearName == '2'){
         $secondYearName = '1951';
     } elseif($secondYearName == '3'){
@@ -24,19 +26,21 @@
         $secondYearName ='2020';
     }
 
+    //Změna proměnné vyjadřující větší či menší hodnoty, než je prahová hodnota
     if($operName == '>'){
         $operName = 'větší';
-        //$diffName = -$diffName;
     } else{
         $operName ='menší';
     }
 
+    //Změna proměnné vyjadřující pokles či navýšení nadmořských výšek
     if($plusMinusName == 'minus'){
         $plusMinusName = 'pokles';
     } else{
         $plusMinusName ='navýšení';
     }  
 
+    //Změna textového řetězce pro snazší pochopení požadovaného výstupu týkajícího se konkrétní varianty využití území
     if($landUseName == 'withoutLanduse'){
         $landUseName = 'bez informace o využití území';
     } elseif($landUseName == 'oldLanduse'){
