@@ -36,4 +36,12 @@
     } else{
         $plusMinusName ='navýšení';
     }  
+
+    if($landUseName == 'withoutLanduse'){
+        $landUseName = 'bez informace o využití území';
+    } elseif($landUseName == 'oldLanduse'){
+        $landUseName = 'Rozdělení dle využití území z období stabilního katastru';
+    } else{
+        $landUseName = 'Rozdělení dle novodobého využití území včetně porovnání se starším využití formou atributu';
+    }
 ?>
