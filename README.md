@@ -63,6 +63,8 @@ region, web
 Tento repozitář se zabývá především zdrojovým kódem na straně klienta a webového serveru.
 
 Strana klienta je sepsána pomocí `HTML`, `CSS` a JavaScriptových knihoven včetně mapového frameworku `CesiumJS`.
+Zjednodušeně lze konstatovat, že webový server zajišťuje přístup k databázi `PostgreSQL`. V databázi s prostorovou extenzí `PostGIS` je zajištěno zpracování vzniklého bodového pole s ostatními datovými sadami. Toto zpracování je přiblíženo v abstraktu
+Poslední část, která je přímo napojena na zmíněnou databázi a zpracovává výstup, se věnuje tvorbě mapové služby v rámci technologie `GeoServer`.
 
-Zjednodušeně lze konstatovat, že webový server zajišťuje přístup k databázi `PostgreSQL`.
-
+Databáze a Geoserver nejsou v repozitáři nahrány z důvodu jejich komplexnosti a jejich neexistence ve variantě zdrojového kódu.
+Datové sady nejsou v repozitáři zpřístupněny z důvodu autorských práv. Data zapůjčil ČÚZK a Mgr. Lukáš Brůha, Ph.D. z Katedry aplikované geoinformatiky a kartografie.
