@@ -1,11 +1,12 @@
 # POROVNÁNÍ ZMĚNY ÚZEMÍ HOLEŠICE
 
- Aplikace vznikla v rámci studia na Přírodovědecké fakultě Univerzity Karlovy.
+ ** Aplikace vznikla v rámci studia na Přírodovědecké fakultě Univerzity Karlovy. **
 
-## Název diplomové práce - česky
+## Název diplomové práce
+### česky
 Návrh aplikace pro vizualizaci geografických dat dokumentujících vývoj zaniklých krajin
 
-## Název diplomové práce - anglicky
+### anglicky
 Design of an application for the visualization of geographic data documenting the development of defunct landscapes
 
 ## Zadání diplomové práce
