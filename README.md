@@ -1,6 +1,6 @@
 # POROVNÁNÍ ZMĚNY ÚZEMÍ HOLEŠICE
 
- ** Aplikace vznikla v rámci studia na Přírodovědecké fakultě Univerzity Karlovy. **
+ __Aplikace vznikla v rámci studia na Přírodovědecké fakultě Univerzity Karlovy.__
 
 ## Název diplomové práce
 ### česky
@@ -58,4 +58,11 @@ query variant depends on the submission of the form by the user.
 ### Key words: 
 spatial database, 3D visualization, map application, defunct landscapes, Most
 region, web
+
+## Stručný popis repozitáře
+Tento repozitář se zabývá především zdrojovým kódem na straně klienta a webového serveru.
+
+Strana klienta je sepsána pomocí `HTML`, `CSS` a JavaScriptových knihoven včetně mapového frameworku `CesiumJS`.
+
+Zjednodušeně lze konstatovat, že webový server zajišťuje přístup k databázi `PostgreSQL`.
 
